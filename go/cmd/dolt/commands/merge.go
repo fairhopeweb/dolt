@@ -110,6 +110,7 @@ func (cmd MergeCmd) Exec(ctx context.Context, commandStr string, args []string, 
 		root, verr = GetWorkingWithVErr(dEnv)
 
 		if verr == nil {
+			// If there are any conflicts or constraint violations then we disallow the merge
 			if has, err := root.HasConflicts(ctx); err != nil {
 				verr = errhand.BuildDError("error: failed to get conflicts").AddCause(err).Build()
 			} else if has {
@@ -122,6 +123,13 @@ func (cmd MergeCmd) Exec(ctx context.Context, commandStr string, args []string, 
 				cli.Println("error: Merging is not possible because you have not committed an active merge.")
 				cli.Println("hint: add affected tables using 'dolt add <table>' and commit using 'dolt commit -m <msg>'")
 				cli.Println("fatal: Exiting because of active merge")
+				return 1
+			}
+
+			if has, err := root.HasConstraintViolations(ctx); err != nil {
+				verr = errhand.BuildDError("error: failed to get constraint violations").AddCause(err).Build()
+			} else if has {
+				cli.Println("fatal: Exiting because of an unresolved constraint violation.")
 				return 1
 			}
 

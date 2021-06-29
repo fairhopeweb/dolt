@@ -259,6 +259,10 @@ func (db Database) GetTableInsensitiveWithRoot(ctx *sql.Context, root *doltdb.Ro
 		suffix := tblName[len(doltdb.DoltConfTablePrefix):]
 		found = true
 		dt, err = dtables.NewConflictsTable(ctx, suffix, root, dtables.RootSetter(db))
+	case strings.HasPrefix(lwrName, doltdb.DoltConstViolTablePrefix):
+		suffix := tblName[len(doltdb.DoltConstViolTablePrefix):]
+		found = true
+		dt, err = dtables.NewConstraintViolationsTable(ctx, suffix, root, dtables.RootSetter(db))
 	}
 	if err != nil {
 		return nil, false, err
@@ -273,6 +277,8 @@ func (db Database) GetTableInsensitiveWithRoot(ctx *sql.Context, root *doltdb.Ro
 		dt, found = dtables.NewLogTable(ctx, db.ddb, head), true
 	case doltdb.TableOfTablesInConflictName:
 		dt, found = dtables.NewTableOfTablesInConflict(ctx, db.ddb, root), true
+	case doltdb.TableOfTablesWithViolationsName:
+		dt, found = dtables.NewTableOfTablesConstraintViolations(ctx, root), true
 	case doltdb.BranchesTableName:
 		dt, found = dtables.NewBranchesTable(ctx, db.ddb), true
 	case doltdb.CommitsTableName:
